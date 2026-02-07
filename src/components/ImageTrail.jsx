@@ -56,9 +56,9 @@ class ImageTrailBase {
     this.activeImagesCount = 0;
     this.isIdle = true;
     this.isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
-    this.threshold = this.isCoarsePointer ? 46 : 86;
-    this.minEmitInterval = this.isCoarsePointer ? 130 : 80;
-    this.maxActiveImages = this.isCoarsePointer ? 6 : 8;
+    this.threshold = this.isCoarsePointer ? 38 : 78;
+    this.minEmitInterval = this.isCoarsePointer ? 105 : 72;
+    this.maxActiveImages = this.isCoarsePointer ? 7 : 9;
     this.lastEmitAt = 0;
     this.rafId = null;
 
@@ -217,7 +217,7 @@ class ImageTrailVariant2 extends ImageTrailBase {
           y: this.cacheMousePos.y - img.rect.height / 2
         },
         {
-          duration: 0.52,
+          duration: 0.46,
           ease: 'power1',
           scale: 1,
           x: this.mousePos.x - img.rect.width / 2,
@@ -232,7 +232,7 @@ class ImageTrailVariant2 extends ImageTrailBase {
           filter: 'brightness(250%)'
         },
         {
-          duration: 0.52,
+          duration: 0.46,
           ease: 'power1',
           scale: 1,
           filter: 'brightness(100%)'
@@ -242,12 +242,12 @@ class ImageTrailVariant2 extends ImageTrailBase {
       .to(
         img.DOM.el,
         {
-          duration: 0.58,
+          duration: 0.52,
           ease: 'power2',
           opacity: 0,
           scale: 0.2
         },
-        0.56
+        0.5
       );
   }
 }

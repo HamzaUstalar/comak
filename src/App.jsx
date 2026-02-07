@@ -92,7 +92,13 @@ function App() {
         url =>
           new Promise(resolve => {
             const image = new Image();
-            const done = () => resolve();
+            const done = () => {
+              if (typeof image.decode === 'function') {
+                image.decode().catch(() => {}).finally(resolve);
+                return;
+              }
+              resolve();
+            };
             image.onload = done;
             image.onerror = done;
             image.src = url;
@@ -233,7 +239,7 @@ function App() {
         </section>
 
         <section className="image-trail-stage" aria-label="Anılar">
-          <ImageTrail items={trailImages} variant={2} />
+          {finalLayerVisible && <ImageTrail items={trailImages} variant={2} />}
         </section>
       </main>
 
