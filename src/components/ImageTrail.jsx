@@ -55,7 +55,11 @@ class ImageTrailBase {
     this.zIndexVal = 1;
     this.activeImagesCount = 0;
     this.isIdle = true;
-    this.threshold = window.matchMedia('(pointer: coarse)').matches ? 16 : 80;
+    this.isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    this.threshold = this.isCoarsePointer ? 46 : 86;
+    this.minEmitInterval = this.isCoarsePointer ? 130 : 80;
+    this.maxActiveImages = this.isCoarsePointer ? 6 : 8;
+    this.lastEmitAt = 0;
     this.rafId = null;
 
     this.mousePos = { x: 0, y: 0 };
@@ -83,7 +87,7 @@ class ImageTrailBase {
     this.lastMousePos = pointerPos;
     this.cacheMousePos = pointerPos;
 
-    this.showNextImage();
+    this.emitImage();
   }
 
   handlePointerMove(ev) {
@@ -96,12 +100,13 @@ class ImageTrailBase {
   }
 
   render() {
+    const now = performance.now();
     const distance = getMouseDistance(this.mousePos, this.lastMousePos);
     this.cacheMousePos.x = lerp(this.cacheMousePos.x, this.mousePos.x, 0.1);
     this.cacheMousePos.y = lerp(this.cacheMousePos.y, this.mousePos.y, 0.1);
 
-    if (distance > this.threshold) {
-      this.showNextImage();
+    if (distance > this.threshold && now - this.lastEmitAt >= this.minEmitInterval) {
+      this.emitImage();
       this.lastMousePos = { ...this.mousePos };
     }
 
@@ -110,6 +115,15 @@ class ImageTrailBase {
     }
 
     this.rafId = requestAnimationFrame(this.render);
+  }
+
+  emitImage() {
+    if (this.activeImagesCount >= this.maxActiveImages) {
+      return;
+    }
+
+    this.lastEmitAt = performance.now();
+    this.showNextImage();
   }
 
   onImageActivated() {
@@ -203,7 +217,7 @@ class ImageTrailVariant2 extends ImageTrailBase {
           y: this.cacheMousePos.y - img.rect.height / 2
         },
         {
-          duration: 0.4,
+          duration: 0.52,
           ease: 'power1',
           scale: 1,
           x: this.mousePos.x - img.rect.width / 2,
@@ -218,7 +232,7 @@ class ImageTrailVariant2 extends ImageTrailBase {
           filter: 'brightness(250%)'
         },
         {
-          duration: 0.4,
+          duration: 0.52,
           ease: 'power1',
           scale: 1,
           filter: 'brightness(100%)'
@@ -228,12 +242,12 @@ class ImageTrailVariant2 extends ImageTrailBase {
       .to(
         img.DOM.el,
         {
-          duration: 0.4,
+          duration: 0.58,
           ease: 'power2',
           opacity: 0,
           scale: 0.2
         },
-        0.45
+        0.56
       );
   }
 }
