@@ -114,9 +114,13 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 2;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  width: min(92vw, 900px);
+  width: min(92vw, 760px);
+  padding-inline: 0.6rem;
   margin: 0;
   pointer-events: none;
 }
@@ -124,10 +128,11 @@
 .hero-content h1 {
   margin: 0;
   font-family: 'Bungee', cursive;
-  font-size: clamp(2rem, 8vw, 4.8rem);
-  line-height: 1.08;
+  font-size: clamp(1.5rem, 7.8vw, 4.8rem);
+  line-height: 1.12;
   letter-spacing: 0.02em;
   color: #fff6eb;
+  text-wrap: balance;
   text-shadow:
     0 3px 0 #f96a7d,
     0 6px 20px rgba(80, 24, 0, 0.35);
@@ -137,7 +142,9 @@
   margin: 0.9rem 0 0;
   font-size: clamp(0.95rem, 2.8vw, 1.18rem);
   font-weight: 700;
+  line-height: 1.35;
   color: #ffe8d7;
+  text-wrap: balance;
   text-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
 }
 
@@ -145,7 +152,9 @@
   margin: 0.45rem 0 0;
   font-size: clamp(0.78rem, 2.2vw, 0.95rem);
   font-weight: 600;
+  line-height: 1.35;
   color: #ffd0d9;
+  text-wrap: balance;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
 }
 
@@ -264,6 +273,26 @@
 }
 
 @media (max-width: 760px) {
+  .hero-content {
+    width: min(94vw, 520px);
+    padding-inline: 0.75rem;
+  }
+
+  .hero-content h1 {
+    font-size: clamp(1.28rem, 8vw, 2.35rem);
+    line-height: 1.15;
+  }
+
+  .hero-subtitle {
+    margin-top: 0.65rem;
+    font-size: clamp(0.88rem, 3.6vw, 1.02rem);
+  }
+
+  .hero-note {
+    margin-top: 0.38rem;
+    font-size: clamp(0.72rem, 3vw, 0.86rem);
+  }
+
   .intro-cta-wrap {
     min-height: 180px;
   }
