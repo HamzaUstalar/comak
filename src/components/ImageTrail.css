@@ -10,7 +10,7 @@
 }
 
 .content__img {
-  width: clamp(130px, 24vw, 182px);
+  width: 190px;
   aspect-ratio: 1.1;
   border-radius: 15px;
   position: absolute;

@@ -36,24 +36,12 @@ function App() {
 
     return window.matchMedia('(pointer: coarse) and (max-width: 1024px)').matches;
   });
-  const [useLiteMode] = useState(() => {
-    if (typeof window === 'undefined') {
-      return true;
-    }
-
-    const cores = navigator.hardwareConcurrency ?? 4;
-    const memory = navigator.deviceMemory ?? 4;
-    return cores <= 6 || memory <= 6;
-  });
   const videoRefs = useRef([]);
   const revealTimeoutsRef = useRef([]);
   const introAudioRef = useRef(null);
 
   const finalLayerVisible = revealStage === revealStages.unveil || revealStage === revealStages.done;
   const introVisible = revealStage !== revealStages.done;
-  const activeBackgroundVideos = useLiteMode ? [backgroundVideos[0]] : backgroundVideos;
-  const currentVideoIndex =
-    activeBackgroundVideos.length > 0 ? activeVideoIndex % activeBackgroundVideos.length : 0;
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(pointer: coarse) and (max-width: 1024px)');
@@ -77,27 +65,23 @@ function App() {
       return undefined;
     }
 
-    if (activeBackgroundVideos.length <= 1) {
-      return undefined;
-    }
-
     const timerId = setInterval(() => {
-      setActiveVideoIndex(prevIndex => (prevIndex + 1) % activeBackgroundVideos.length);
+      setActiveVideoIndex(prevIndex => (prevIndex + 1) % backgroundVideos.length);
     }, 5000);
 
     return () => clearInterval(timerId);
-  }, [isMobileClient, activeBackgroundVideos.length]);
+  }, [isMobileClient]);
 
   useEffect(() => {
     if (!isMobileClient) {
       return;
     }
 
-    const video = videoRefs.current[currentVideoIndex];
+    const video = videoRefs.current[activeVideoIndex];
     if (!video) return;
     video.currentTime = 0;
     video.play().catch(() => {});
-  }, [currentVideoIndex, isMobileClient]);
+  }, [activeVideoIndex, isMobileClient]);
 
   useEffect(() => {
     let cancelled = false;
@@ -229,13 +213,13 @@ function App() {
 
       <main className={`birthday-page ${finalLayerVisible ? 'is-revealed' : 'is-locked'}`}>
         <div className="video-background" aria-hidden="true">
-          {activeBackgroundVideos.map((videoSrc, index) => (
+          {backgroundVideos.map((videoSrc, index) => (
             <video
               key={videoSrc}
               ref={node => {
                 videoRefs.current[index] = node;
               }}
-              className={`background-video ${currentVideoIndex === index ? 'is-active' : 'is-idle'}`}
+              className={`background-video ${activeVideoIndex === index ? 'is-active' : 'is-idle'}`}
               autoPlay
               loop
               muted
@@ -255,7 +239,7 @@ function App() {
         </section>
 
         <section className="image-trail-stage" aria-label="Anılar">
-          {finalLayerVisible && <ImageTrail items={trailImages} variant={useLiteMode ? 1 : 2} />}
+          {finalLayerVisible && <ImageTrail items={trailImages} variant={2} />}
         </section>
       </main>
 
