@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 
 import './ImageTrail.css';
@@ -66,21 +66,37 @@ class ImageTrailBase {
     this.zIndexVal = 1;
     this.activeImagesCount = 0;
     this.isIdle = true;
-    this.threshold = 80;
+    this.threshold = window.matchMedia('(pointer: coarse)').matches ? 24 : 80;
     this.rafId = null;
 
     this.mousePos = { x: 0, y: 0 };
     this.lastMousePos = { x: 0, y: 0 };
     this.cacheMousePos = { x: 0, y: 0 };
 
+    this.handlePointerDown = this.handlePointerDown.bind(this);
     this.handlePointerMove = this.handlePointerMove.bind(this);
-    this.initRender = this.initRender.bind(this);
     this.render = this.render.bind(this);
 
     this.container.addEventListener('mousemove', this.handlePointerMove);
     this.container.addEventListener('touchmove', this.handlePointerMove, { passive: false });
-    this.container.addEventListener('mousemove', this.initRender, { once: true });
-    this.container.addEventListener('touchmove', this.initRender, { once: true, passive: false });
+    this.container.addEventListener('mousedown', this.handlePointerDown);
+    this.container.addEventListener('touchstart', this.handlePointerDown, { passive: false });
+
+    this.rafId = requestAnimationFrame(this.render);
+  }
+
+  handlePointerDown(ev) {
+    if (ev.cancelable && ev.type === 'touchstart') {
+      ev.preventDefault();
+    }
+
+    const rect = this.container.getBoundingClientRect();
+    const pointerPos = getLocalPointerPos(ev, rect);
+    this.mousePos = pointerPos;
+    this.lastMousePos = pointerPos;
+    this.cacheMousePos = pointerPos;
+
+    this.showNextImage();
   }
 
   handlePointerMove(ev) {
@@ -90,13 +106,6 @@ class ImageTrailBase {
 
     const rect = this.container.getBoundingClientRect();
     this.mousePos = getLocalPointerPos(ev, rect);
-  }
-
-  initRender(ev) {
-    const rect = this.container.getBoundingClientRect();
-    this.mousePos = getLocalPointerPos(ev, rect);
-    this.cacheMousePos = { ...this.mousePos };
-    this.rafId = requestAnimationFrame(this.render);
   }
 
   render() {
@@ -140,6 +149,8 @@ class ImageTrailBase {
     }
     this.container.removeEventListener('mousemove', this.handlePointerMove);
     this.container.removeEventListener('touchmove', this.handlePointerMove);
+    this.container.removeEventListener('mousedown', this.handlePointerDown);
+    this.container.removeEventListener('touchstart', this.handlePointerDown);
     this.images.forEach(img => img.destroy());
   }
 }
@@ -253,10 +264,51 @@ const variantMap = {
 };
 
 export default function ImageTrail({ items = [], variant = 1 }) {
+  const [readyItems, setReadyItems] = useState([]);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    if (!containerRef.current) return undefined;
+    let cancelled = false;
+    const uniqueItems = [...new Set(items.filter(Boolean))];
+
+    if (uniqueItems.length === 0) {
+      Promise.resolve().then(() => {
+        if (!cancelled) {
+          setReadyItems([]);
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    Promise.all(
+      uniqueItems.map(
+        url =>
+          new Promise(resolve => {
+            const image = new Image();
+            const done = () => resolve();
+            image.onload = done;
+            image.onerror = done;
+            image.src = url;
+            if (image.complete) {
+              done();
+            }
+          })
+      )
+    ).then(() => {
+      if (!cancelled) {
+        setReadyItems(items);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [items]);
+
+  useEffect(() => {
+    if (!containerRef.current || readyItems.length === 0) return undefined;
 
     const Cls = variantMap[variant] || variantMap[1];
     const instance = new Cls(containerRef.current);
@@ -264,11 +316,11 @@ export default function ImageTrail({ items = [], variant = 1 }) {
     return () => {
       instance.destroy();
     };
-  }, [variant, items]);
+  }, [variant, readyItems]);
 
   return (
     <div className="content" ref={containerRef}>
-      {items.map((url, i) => (
+      {readyItems.map((url, i) => (
         <div className="content__img" key={i}>
           <div className="content__img-inner" style={{ backgroundImage: `url(${url})` }} />
         </div>

@@ -6,6 +6,7 @@
   border-radius: 8px;
   background: transparent;
   overflow: visible;
+  touch-action: none;
 }
 
 .content__img {
