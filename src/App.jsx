@@ -2,20 +2,22 @@
 import ImageTrail from './components/ImageTrail';
 import './App.css';
 
+const media = fileName => `${import.meta.env.BASE_URL}media/${fileName}`;
+
 const trailImages = [
-  '/media/friends-1.jpeg',
-  '/media/friends-2.jpeg',
-  '/media/friends-1.jpeg',
-  '/media/friends-2.jpeg',
-  '/media/friends-1.jpeg',
-  '/media/friends-2.jpeg',
-  '/media/friends-1.jpeg',
-  '/media/friends-2.jpeg'
+  media('friends-1.jpeg'),
+  media('friends-2.jpeg'),
+  media('friends-1.jpeg'),
+  media('friends-2.jpeg'),
+  media('friends-1.jpeg'),
+  media('friends-2.jpeg'),
+  media('friends-1.jpeg'),
+  media('friends-2.jpeg')
 ];
 
-const backgroundVideos = ['/media/websitevideo.mp4', '/media/friends-loop.mp4'];
-const introVideo = '/media/intro-24-background.mp4';
-const introAudio = '/media/intro-24-audio.m4a';
+const backgroundVideos = [media('websitevideo.mp4'), media('friends-loop.mp4')];
+const introVideo = media('intro-24-background.mp4');
+const introAudio = media('intro-24-audio.m4a');
 const revealStages = {
   gate: 'gate',
   unveil: 'unveil',
