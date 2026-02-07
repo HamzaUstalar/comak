@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 
 import './ImageTrail.css';
@@ -8,20 +8,9 @@ function lerp(a, b, n) {
 }
 
 function getLocalPointerPos(e, rect) {
-  let clientX = 0;
-  let clientY = 0;
-
-  if (e.touches && e.touches.length > 0) {
-    clientX = e.touches[0].clientX;
-    clientY = e.touches[0].clientY;
-  } else {
-    clientX = e.clientX;
-    clientY = e.clientY;
-  }
-
   return {
-    x: clientX - rect.left,
-    y: clientY - rect.top
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
   };
 }
 
@@ -66,7 +55,7 @@ class ImageTrailBase {
     this.zIndexVal = 1;
     this.activeImagesCount = 0;
     this.isIdle = true;
-    this.threshold = window.matchMedia('(pointer: coarse)').matches ? 24 : 80;
+    this.threshold = window.matchMedia('(pointer: coarse)').matches ? 16 : 80;
     this.rafId = null;
 
     this.mousePos = { x: 0, y: 0 };
@@ -77,16 +66,14 @@ class ImageTrailBase {
     this.handlePointerMove = this.handlePointerMove.bind(this);
     this.render = this.render.bind(this);
 
-    this.container.addEventListener('mousemove', this.handlePointerMove);
-    this.container.addEventListener('touchmove', this.handlePointerMove, { passive: false });
-    this.container.addEventListener('mousedown', this.handlePointerDown);
-    this.container.addEventListener('touchstart', this.handlePointerDown, { passive: false });
+    this.container.addEventListener('pointerdown', this.handlePointerDown, { passive: false });
+    this.container.addEventListener('pointermove', this.handlePointerMove, { passive: false });
 
     this.rafId = requestAnimationFrame(this.render);
   }
 
   handlePointerDown(ev) {
-    if (ev.cancelable && ev.type === 'touchstart') {
+    if (ev.cancelable) {
       ev.preventDefault();
     }
 
@@ -100,7 +87,7 @@ class ImageTrailBase {
   }
 
   handlePointerMove(ev) {
-    if (ev.cancelable && ev.type === 'touchmove') {
+    if (ev.cancelable && ev.pointerType === 'touch') {
       ev.preventDefault();
     }
 
@@ -147,10 +134,9 @@ class ImageTrailBase {
     if (this.rafId) {
       cancelAnimationFrame(this.rafId);
     }
-    this.container.removeEventListener('mousemove', this.handlePointerMove);
-    this.container.removeEventListener('touchmove', this.handlePointerMove);
-    this.container.removeEventListener('mousedown', this.handlePointerDown);
-    this.container.removeEventListener('touchstart', this.handlePointerDown);
+
+    this.container.removeEventListener('pointerdown', this.handlePointerDown);
+    this.container.removeEventListener('pointermove', this.handlePointerMove);
     this.images.forEach(img => img.destroy());
   }
 }
@@ -264,51 +250,10 @@ const variantMap = {
 };
 
 export default function ImageTrail({ items = [], variant = 1 }) {
-  const [readyItems, setReadyItems] = useState([]);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    let cancelled = false;
-    const uniqueItems = [...new Set(items.filter(Boolean))];
-
-    if (uniqueItems.length === 0) {
-      Promise.resolve().then(() => {
-        if (!cancelled) {
-          setReadyItems([]);
-        }
-      });
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    Promise.all(
-      uniqueItems.map(
-        url =>
-          new Promise(resolve => {
-            const image = new Image();
-            const done = () => resolve();
-            image.onload = done;
-            image.onerror = done;
-            image.src = url;
-            if (image.complete) {
-              done();
-            }
-          })
-      )
-    ).then(() => {
-      if (!cancelled) {
-        setReadyItems(items);
-      }
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [items]);
-
-  useEffect(() => {
-    if (!containerRef.current || readyItems.length === 0) return undefined;
+    if (!containerRef.current || items.length === 0) return undefined;
 
     const Cls = variantMap[variant] || variantMap[1];
     const instance = new Cls(containerRef.current);
@@ -316,11 +261,11 @@ export default function ImageTrail({ items = [], variant = 1 }) {
     return () => {
       instance.destroy();
     };
-  }, [variant, readyItems]);
+  }, [variant, items]);
 
   return (
     <div className="content" ref={containerRef}>
-      {readyItems.map((url, i) => (
+      {items.map((url, i) => (
         <div className="content__img" key={i}>
           <div className="content__img-inner" style={{ backgroundImage: `url(${url})` }} />
         </div>

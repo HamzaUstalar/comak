@@ -28,6 +28,7 @@ function App() {
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [revealStage, setRevealStage] = useState(revealStages.gate);
   const [musicStarted, setMusicStarted] = useState(false);
+  const [trailAssetsReady, setTrailAssetsReady] = useState(false);
   const [isMobileClient, setIsMobileClient] = useState(() => {
     if (typeof window === 'undefined') {
       return true;
@@ -81,6 +82,35 @@ function App() {
     video.currentTime = 0;
     video.play().catch(() => {});
   }, [activeVideoIndex, isMobileClient]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const uniqueTrailImages = [...new Set(trailImages)];
+
+    Promise.all(
+      uniqueTrailImages.map(
+        url =>
+          new Promise(resolve => {
+            const image = new Image();
+            const done = () => resolve();
+            image.onload = done;
+            image.onerror = done;
+            image.src = url;
+            if (image.complete) {
+              done();
+            }
+          })
+      )
+    ).then(() => {
+      if (!cancelled) {
+        setTrailAssetsReady(true);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const revealTimeouts = revealTimeoutsRef.current;
@@ -143,6 +173,10 @@ function App() {
 
   const handleIntroClick = async () => {
     if (revealStage !== revealStages.gate) {
+      return;
+    }
+
+    if (!trailAssetsReady) {
       return;
     }
 
@@ -217,8 +251,13 @@ function App() {
                   Müziği Başlat
                 </button>
               ) : (
-                <button className="intro-button" type="button" onClick={handleIntroClick}>
-                  Butona Bas Amına Çaktığım
+                <button
+                  className="intro-button"
+                  type="button"
+                  onClick={handleIntroClick}
+                  disabled={!trailAssetsReady}
+                >
+                  {trailAssetsReady ? 'Butona Bas Amına Çaktığım' : 'Fotoğraflar Yükleniyor...'}
                 </button>
               )}
             </div>

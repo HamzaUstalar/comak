@@ -257,6 +257,12 @@
   outline-offset: 4px;
 }
 
+.intro-button:disabled {
+  opacity: 0.72;
+  cursor: wait;
+  transform: none;
+}
+
 @media (max-width: 760px) {
   .intro-cta-wrap {
     min-height: 180px;
